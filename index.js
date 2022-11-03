@@ -21,13 +21,23 @@ async function run() {
     await client.connect();
     const accomodationCollection = client.db("refugeeAccomodation").collection("accomodation");
 
-    // All Accomodations======================
+    // Get Accomodations======================
     app.get("/accomodations", async (req, res) => {
       const query = {};
       const cursor = accomodationCollection.find(query);
       const accomodations = await cursor.toArray();
       res.send(accomodations);
     });
+
+    // POST accomodation ==============
+    app.post('/accomodations', async (req, res) => {
+    const newAccomodation = req.body;
+    const result = await accomodationCollection.insertOne(newAccomodation);
+    res.send(result);
+    
+    });
+
+
   } finally {
   }
 }
@@ -38,7 +48,9 @@ app.get("/home", (req, res) => {
   res.send(accomo);
 });
 
-// add accomodation post
+
+
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
