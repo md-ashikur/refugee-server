@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -36,7 +36,13 @@ async function run() {
     res.send(result);
     
     });
-
+// Delete accomodation =============
+  app.delete('/accomodations/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = {_id: ObjectId(id)};
+    const result = await accomodationCollection.deleteOne(query);
+    res.send(result);
+  })
 
   } finally {
   }
