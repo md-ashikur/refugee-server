@@ -19,7 +19,9 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    const accomodationCollection = client.db("refugeeAccomodation").collection("accomodation");
+    const accomodationCollection = client
+      .db("refugeeAccomodation")
+      .collection("accomodation");
 
     // Get Accomodations======================
     app.get("/accomodations", async (req, res) => {
@@ -30,20 +32,42 @@ async function run() {
     });
 
     // POST accomodation ==============
-    app.post('/accomodations', async (req, res) => {
-    const newAccomodation = req.body;
-    const result = await accomodationCollection.insertOne(newAccomodation);
-    res.send(result);
-    
+    app.post("/accomodations", async (req, res) => {
+      const newAccomodation = req.body;
+      const result = await accomodationCollection.insertOne(newAccomodation);
+      res.send(result);
     });
-// Delete accomodation =============
-  app.delete('/accomodations/:id', async (req, res) => {
-    const id = req.params.id;
-    const query = {_id: ObjectId(id)};
-    const result = await accomodationCollection.deleteOne(query);
-    res.send(result);
-  })
+    // Delete accomodation =============
+    app.delete("/accomodations/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await accomodationCollection.deleteOne(query);
+      res.send(result);
+    });
+    // Edit accomodation ================
+    app.put("/accomodations/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          image: data.image,
+          people: data.people,
+          rooms: data.rooms,
+          city: data.city,
+          from: data.from,
+          to: data.to,
+          email: data.email,
+          phone: data.phone,
+          title: data.title,
+          description: data.description,
+        },
+      };
 
+      const result = await accomodationCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
   } finally {
   }
 }
@@ -53,10 +77,6 @@ run().catch(console.dir);
 app.get("/home", (req, res) => {
   res.send(accomo);
 });
-
-
-
-
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
