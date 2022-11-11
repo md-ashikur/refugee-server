@@ -1,6 +1,10 @@
 const express = require("express");
 const app = express();
+const path = require("path");
+const ImageModal = require("./image.modal");
+const fs = require("fs");
 const cors = require("cors");
+const mongoose = require("mongoose");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
@@ -8,6 +12,21 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
+
+const multer = require("multer");
+
+//storage====================
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "Images");
+  },
+  filename: (req, file, cb) => {
+    console.log(file);
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage: storage });
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.ukfxhcm.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -22,6 +41,9 @@ async function run() {
     const accomodationCollection = client
       .db("refugeeAccomodation")
       .collection("accomodation");
+    const userCollection = client
+      .db("refugeeAccomodation")
+      .collection("user");
 
     // Get Accomodations======================
     app.get("/accomodations", async (req, res) => {
@@ -32,10 +54,40 @@ async function run() {
     });
 
     // POST accomodation ==============
-    app.post("/accomodations", async (req, res) => {
+    app.post("/accomodations", upload.single("image"), async (req, res) => {
       const newAccomodation = req.body;
       const result = await accomodationCollection.insertOne(newAccomodation);
       res.send(result);
+    });
+
+    app.post("/accomodations", upload.single("image"), async (req, res) => {
+      upload(req, res, (err) => {
+        const data = req.body;
+        if (err) {
+          console.log(err);
+        } else {
+          const newImage = new ImageModal({
+            people: data.people,
+            rooms: data.rooms,
+            city: data.city,
+            from: data.from,
+            to: data.to,
+            email: data.email,
+            phone: data.phone,
+            title: data.title,
+            description: data.description,
+            image: {
+              data: fs.readFileSync(
+                path.join(__dirname + "/uploads/" + req.file.filename)
+              ),
+            },
+          });
+          newImage
+            .save()
+            .then(() => res.send("success"))
+            .catch((err) => console.log(err));
+        }
+      });
     });
     // Delete accomodation =============
     app.delete("/accomodations/:id", async (req, res) => {
@@ -65,7 +117,11 @@ async function run() {
         },
       };
 
-      const result = await accomodationCollection.updateOne(filter, updateDoc, options);
+      const result = await accomodationCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
   } finally {
