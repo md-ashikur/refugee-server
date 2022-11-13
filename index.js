@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const path = require("path");
-const cors = require("cors");
+
 const multer = require("multer");
 const mongoose = require("mongoose");
 const authRoute = require("./routes/auth");
@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000;
 require("dotenv").config();
 
 // middleware
-app.use(cors());
+
 app.use(express.json());
 
 // connect to mongoDB start====================
@@ -19,6 +19,7 @@ mongoose
   .connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    
   })
   .then(console.log("conneted"))
   .catch((err) => console.log(err));
@@ -47,9 +48,13 @@ app.use("/auth", authRoute);
 app.use("/users", userRoute);
 app.use("/posts", postRoute);
 // routes end==============================
-app.get("/home", (req, res) => {
-  res.send(accomo);
-});
+app.get('/', (req, res) => {
+
+  res.setHeader('X-Foo', 'bar')
+ 
+  res.send('Hello World!')
+ 
+ })
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
