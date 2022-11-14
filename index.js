@@ -10,10 +10,9 @@ const postRoute = require("./routes/posts");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 
-// middleware
 
 app.use(express.json());
-
+app.use("/Images", express.static(path.join(__dirname, "/Images")))
 // connect to mongoDB start====================
 mongoose
   .connect(process.env.MONGO_URL, {
